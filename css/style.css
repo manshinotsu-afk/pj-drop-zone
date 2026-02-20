@@ -16,7 +16,7 @@
   --accent: #22d3ee;
   --accent-dim: rgba(34, 211, 238, 0.25);
   /** 画面（コンテナ）の最低幅。これより狭いウィンドウでは横スクロールになる */
-  --min-view-width: 400px;
+  --min-view-width: 420px;
 }
 
 body {
@@ -314,7 +314,7 @@ body {
 .title-logo {
   position: relative;
   font-family: 'Orbitron', sans-serif;
-  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.22em;
   margin: 0;
@@ -334,9 +334,9 @@ body {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
+  width: 3px;
   height: 75%;
-  min-height: 20px;
+  min-height: 14px;
   background: linear-gradient(180deg, #22d3ee 0%, #0ea5e9 50%, #0369a1 100%);
   border-radius: 2px;
   box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
@@ -354,7 +354,7 @@ body {
 }
 
 .header-instructions {
-  flex: 0.8;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -591,7 +591,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 44px;
   padding: 14px 12px;
   background: var(--bg-panel);
   border-top: 1px solid var(--border-subtle);
