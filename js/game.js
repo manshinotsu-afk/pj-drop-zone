@@ -696,6 +696,16 @@
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('keyup', onKeyUp);
 
+  // --- タイトル・リザルト画面でクリック/タップで進む（click はマウス・タップ両方で発火） ---
+  function onTitleOrResultClick(e) {
+    if (phase === PHASE_TITLE || phase === PHASE_RESULT) {
+      e.preventDefault();
+      startNewGame();
+    }
+  }
+  if (titleScreenEl) titleScreenEl.addEventListener('click', onTitleOrResultClick);
+  if (resultScreenEl) resultScreenEl.addEventListener('click', onTitleOrResultClick);
+
   // --- スマホ用仮想ボタン ---
   function onVirtualKeyDown(keyName) {
     if (keyName === 'w') keys.w = true;
