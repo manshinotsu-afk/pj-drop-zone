@@ -302,6 +302,12 @@ body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+@media (max-height: 850px) {
+  .game-header {
+    display: none;
+  }
+}
+
 .header-logo {
   flex: 1.2;
   display: flex;
