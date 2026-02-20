@@ -302,7 +302,7 @@ body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
-@media (max-height: 850px) {
+@media (max-height: 880px) {
   .game-header {
     display: none;
   }
