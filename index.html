@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DROP ZONE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div id="title-screen" class="title-screen">
+      <div class="title-screen-bg"></div>
+      <h1 class="title-screen-logo">DROP ZONE</h1>
+      <p class="title-screen-tagline">落とすか、落とされるか</p>
+      <p class="title-screen-start">
+        <span class="title-start-desktop"><span class="title-screen-key">Space</span> to Start</span>
+        <span class="title-start-mobile">Tap to Start</span>
+      </p>
+    </div>
+    <div id="result-screen" class="result-screen">
+      <div class="result-screen-bg"></div>
+      <div class="result-icon-wrap">
+        <img class="result-icon player-face" src="png/player/playerFace.png" alt="">
+      </div>
+      <p class="result-title" id="result-text"></p>
+      <p class="result-sub" id="result-sub"></p>
+    </div>
+    <header class="game-header">
+      <div class="header-logo">
+        <h1 class="title-logo">DROP ZONE</h1>
+      </div>
+      <div class="header-instructions">
+        <p class="instructions-title">操作キー</p>
+        <ul class="instructions-list">
+          <li>移動 … <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></li>
+          <li>攻撃 … <kbd>Space</kbd></li>
+        </ul>
+      </div>
+    </header>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div class="player-status" id="player-status">
+      <div class="player-card" data-player="0">
+        <img class="player-icon player-face" src="png/player/playerFace.png" alt="1P">
+        <span class="player-name">PLAYER</span>
+        <div class="gauge"><div class="gauge-fill" id="gauge-0"></div></div>
+      </div>
+      <div class="player-card" data-player="1">
+        <div class="player-icon cpu-icon cpu-2p"><span class="cpu-icon-eye"></span><span class="cpu-icon-eye"></span></div>
+        <span class="player-name">CPU1</span>
+        <div class="gauge"><div class="gauge-fill" id="gauge-1"></div></div>
+      </div>
+      <div class="player-card" data-player="2">
+        <div class="player-icon cpu-icon cpu-3p"><span class="cpu-icon-eye"></span><span class="cpu-icon-eye"></span></div>
+        <span class="player-name">CPU2</span>
+        <div class="gauge"><div class="gauge-fill" id="gauge-2"></div></div>
+      </div>
+      <div class="player-card" data-player="3">
+        <div class="player-icon cpu-icon cpu-4p"><span class="cpu-icon-eye"></span><span class="cpu-icon-eye"></span></div>
+        <span class="player-name">CPU3</span>
+        <div class="gauge"><div class="gauge-fill" id="gauge-3"></div></div>
+      </div>
+    </div>
+    <div class="virtual-controls">
+      <div class="dpad">
+        <button type="button" class="dpad-btn dpad-up" data-key="w" aria-label="上">↑</button>
+        <button type="button" class="dpad-btn dpad-left" data-key="a" aria-label="左">←</button>
+        <span class="dpad-center" aria-hidden="true"></span>
+        <button type="button" class="dpad-btn dpad-right" data-key="d" aria-label="右">→</button>
+        <button type="button" class="dpad-btn dpad-down" data-key="s" aria-label="下">↓</button>
+      </div>
+      <button type="button" class="attack-btn" data-key="space" aria-label="攻撃">
+        <span class="attack-label">Attack</span>
+        <span class="attack-key-hint">SPACE キー</span>
+      </button>
+    </div>
+  </div>
+  <script src="js/game.js"></script>
+</body>
+</html>
