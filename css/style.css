@@ -15,10 +15,13 @@
   --text-muted: #8b9cad;
   --accent: #22d3ee;
   --accent-dim: rgba(34, 211, 238, 0.25);
+  /** 画面（コンテナ）の最低幅。これより狭いウィンドウでは横スクロールになる */
+  --min-view-width: 400px;
 }
 
 body {
   min-height: 100vh;
+  min-width: var(--min-view-width);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,6 +33,7 @@ body {
   position: relative;
   width: min(90vmin, 480px);
   max-width: 100%;
+  min-width: var(--min-view-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,6 +82,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.35em;
   margin: 0;
+  white-space: nowrap;
   background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 25%, #7dd3fc 60%, #0ea5e9 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -314,6 +319,7 @@ body {
   letter-spacing: 0.22em;
   margin: 0;
   padding-left: 14px;
+  white-space: nowrap;
   background: linear-gradient(90deg, #e0f2fe 0%, #7dd3fc 40%, #0ea5e9 100%);
   -webkit-background-clip: text;
   background-clip: text;

@@ -664,7 +664,7 @@
 
   // --- 1P スプライト読み込み（P1_SPRITE_MAP に従い PNG_Player 配下を読み込み） ---
   function loadSprites(cb) {
-    const base = 'png/player/player_';
+    const base = 'assets/player/player_';
     const toLoad = [];
     [DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT].forEach((dir) => {
       const m = P1_SPRITE_MAP[dir];
