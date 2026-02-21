@@ -37,8 +37,8 @@
   const PHASE_BATTLE = 'battle';
   const PHASE_RESULT = 'result';
   const PHASE_STAGE_CLEAR = 'stage_clear';
-  const MAX_STAGE = 5;
-  const CPU_MOVE_INTERVAL_STAGE_MS = [0, 500, 500, 500, 400, 300]; // インデックス1〜5がステージ1〜5の移動間隔(ms)
+  const MAX_STAGE = 7;
+  const CPU_MOVE_INTERVAL_STAGE_MS = [0, 500, 500, 500, 400, 300, 250, 200]; // インデックス1〜7がステージ1〜7の移動間隔(ms)
 
   const CPU_COLORS = ['#0ea5e9', '#f43f5e', '#eab308', '#22c55e']; // 2P青,3P赤,4P黄,4P緑 → 2P,3P,4P なので 3色で 2,3,4
 
@@ -577,11 +577,16 @@
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, GAME_SIZE, GAME_SIZE);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 32px sans-serif';
     ctx.textAlign = 'center';
     if (phase === PHASE_READY) {
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('Stage ' + stage, GAME_SIZE / 2, GAME_SIZE / 2 - 36);
+      ctx.font = 'bold 32px sans-serif';
       ctx.fillText('READY', GAME_SIZE / 2, GAME_SIZE / 2);
     } else if (phase === PHASE_FIGHT) {
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('Stage ' + stage, GAME_SIZE / 2, GAME_SIZE / 2 - 36);
+      ctx.font = 'bold 32px sans-serif';
       ctx.fillText('FIGHT!!', GAME_SIZE / 2, GAME_SIZE / 2);
     } else if (phase === PHASE_STAGE_CLEAR) {
       ctx.font = 'bold 28px sans-serif';
@@ -619,11 +624,9 @@
     }
     const container = document.querySelector('.container');
     if (container) {
-      container.classList.remove('stage-1', 'stage-2', 'stage-3', 'stage-4', 'stage-5');
+      container.classList.remove('stage-1', 'stage-2', 'stage-3', 'stage-4', 'stage-5', 'stage-6', 'stage-7');
       container.classList.add('stage-' + stage);
     }
-    const stageEl = document.getElementById('stage-indicator');
-    if (stageEl) stageEl.textContent = 'Stage ' + stage + '/' + MAX_STAGE;
   }
 
   // --- ゲームフロー ---
