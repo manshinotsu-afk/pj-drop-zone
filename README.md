@@ -39,5 +39,5 @@ https://manshinotsu-afk.github.io/pj-drop-zone/
 
 ---
 
-## ライセンス
-
+## クレジット
+Special thanks to Kenney (www.kenney.nl) for the Sokoban asset pack.
