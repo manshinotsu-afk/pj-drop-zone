@@ -216,7 +216,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 50%;
+  border-radius: 0;
 }
 
 .result-screen.victory .result-icon-wrap {
@@ -224,8 +224,8 @@ body {
 }
 
 .result-screen.victory .result-icon {
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.5), 0 0 48px rgba(234, 179, 8, 0.25);
-  border: 3px solid rgba(253, 224, 71, 0.5);
+  box-shadow: none;
+  border: none;
 }
 
 .result-screen.defeat .result-icon-wrap {
@@ -313,8 +313,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 10px;
   min-width: 0;
   padding-left: 8px;
+}
+
+.stage-indicator {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .title-logo {
@@ -407,7 +417,15 @@ body {
   background: #0d1117;
 }
 
-/* --- プレイヤーステータス --- */
+/* --- プレイヤーステータス（ステージで参加人数を制限） --- */
+.container.stage-1 .player-card[data-player="2"],
+.container.stage-1 .player-card[data-player="3"] {
+  display: none;
+}
+.container.stage-2 .player-card[data-player="3"] {
+  display: none;
+}
+
 .player-status {
   width: 100%;
   display: flex;
@@ -448,9 +466,9 @@ body {
 }
 
 .player-icon.player-face {
-  border-radius: 50%;
+  border-radius: 0;
   object-fit: cover;
-  border: 2px solid var(--border-subtle);
+  border: none;
 }
 
 .player-card[data-player="0"] .player-icon.player-face {
@@ -460,7 +478,7 @@ body {
 
 .player-icon.cpu-icon {
   position: relative;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid var(--border-subtle);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }

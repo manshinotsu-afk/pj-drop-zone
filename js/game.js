@@ -36,6 +36,9 @@
   const PHASE_FIGHT = 'fight';
   const PHASE_BATTLE = 'battle';
   const PHASE_RESULT = 'result';
+  const PHASE_STAGE_CLEAR = 'stage_clear';
+  const MAX_STAGE = 5;
+  const CPU_MOVE_INTERVAL_STAGE_MS = [0, 500, 500, 500, 400, 300]; // インデックス1〜5がステージ1〜5の移動間隔(ms)
 
   const CPU_COLORS = ['#0ea5e9', '#f43f5e', '#eab308', '#22c55e']; // 2P青,3P赤,4P黄,4P緑 → 2P,3P,4P なので 3色で 2,3,4
 
@@ -60,8 +63,9 @@
   let phase = PHASE_TITLE;
   let grid = []; // grid[y][x] = { present: bool, droppedAt: number | null, respawnAnimStart: number | null }
   let players = []; // { x, y, dir, alive, moveStunUntil, magicStunUntil, magicCooldownUntil, lastDirChangeAt (CPU), lastMoveAt (CPU) }
-  let magic = { active: false, phase: null, cells: [], glowIndex: 0, dropIndex: 0, nextAt: 0, caster: null };
+  let magicList = []; // 複数攻撃を同時に許可。各要素: { phase, cells, glowIndex, dropIndex, nextAt, caster }
   let phaseTimer = 0; // READY/FIGHT 用
+  let stage = 1; // 1=1P+CPU1人, 2=1P+CPU2人, 3=1P+CPU3人
   let winner = null; // 1..4 or 'draw'
   let player1Sprites = []; // 方向0..3 → [idle画像, 移動1, 移動2]
   let spriteFrame = 0;
@@ -70,6 +74,14 @@
 
   // --- ユーティリティ ---
   function now() { return performance.now(); }
+
+  function getActivePlayerCount() {
+    return Math.min(stage + 1, 4); // ステージ1→2人, 2→3人, 3〜5→4人
+  }
+
+  function getCpuMoveIntervalMs() {
+    return CPU_MOVE_INTERVAL_STAGE_MS[stage] || 500;
+  }
 
   function initGrid() {
     grid = [];
@@ -82,11 +94,12 @@
   }
 
   function initPlayers() {
+    const activeCount = getActivePlayerCount();
     players = [
       { x: 4, y: 0, dir: DIR_UP, alive: true, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
       { x: 5, y: 9, dir: DIR_DOWN, alive: true, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
-      { x: 9, y: 4, dir: DIR_LEFT, alive: true, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
-      { x: 0, y: 5, dir: DIR_RIGHT, alive: true, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
+      { x: 9, y: 4, dir: DIR_LEFT, alive: activeCount >= 3, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
+      { x: 0, y: 5, dir: DIR_RIGHT, alive: activeCount >= 4, moveStunUntil: 0, magicStunUntil: 0, magicCooldownUntil: 0, lastDirChangeAt: 0, lastMoveAt: 0 },
     ];
   }
 
@@ -147,52 +160,52 @@
   }
 
   function startMagic(casterIndex) {
-    if (magic.active) return;
     const p = players[casterIndex];
     if (!p.alive || now() < p.magicStunUntil || now() < p.magicCooldownUntil) return;
     const cells = getMagicTargetCells(casterIndex);
     if (cells.length === 0) return;
-    magic = {
-      active: true,
+    magicList.push({
       phase: 'glow',
       cells,
       glowIndex: 0,
       dropIndex: 0,
       nextAt: now() + MAGIC_GLOW_INTERVAL_MS,
       caster: casterIndex,
-    };
+    });
     players[casterIndex].magicStunUntil = now() + MAGIC_STUN_MS;
     players[casterIndex].magicCooldownUntil = now() + MAGIC_COOLDOWN_MS;
   }
 
   function updateMagic(dt) {
-    if (!magic.active) return;
     const t = now();
-    if (t < magic.nextAt) return;
-    if (magic.phase === 'glow') {
-      magic.glowIndex++;
-      if (magic.glowIndex >= magic.cells.length) {
-        magic.phase = 'drop';
-        magic.dropIndex = 0;
+    for (let i = magicList.length - 1; i >= 0; i--) {
+      const magic = magicList[i];
+      if (t < magic.nextAt) continue;
+      if (magic.phase === 'glow') {
+        magic.glowIndex++;
+        if (magic.glowIndex >= magic.cells.length) {
+          magic.phase = 'drop';
+          magic.dropIndex = 0;
+          magic.nextAt = t + MAGIC_DROP_INTERVAL_MS;
+        } else {
+          magic.nextAt = t + MAGIC_GLOW_INTERVAL_MS;
+        }
+        continue;
+      }
+      if (magic.phase === 'drop') {
+        const cell = magic.cells[magic.dropIndex];
+        const g = grid[cell.y][cell.x];
+        g.present = false;
+        g.droppedAt = t;
+        const who = getPlayerAt(cell.x, cell.y);
+        if (who >= 0) players[who].alive = false;
+        magic.dropIndex++;
+        if (magic.dropIndex >= magic.cells.length) {
+          magicList.splice(i, 1);
+          continue;
+        }
         magic.nextAt = t + MAGIC_DROP_INTERVAL_MS;
-      } else {
-        magic.nextAt = t + MAGIC_GLOW_INTERVAL_MS;
       }
-      return;
-    }
-    if (magic.phase === 'drop') {
-      const cell = magic.cells[magic.dropIndex];
-      const g = grid[cell.y][cell.x];
-      g.present = false;
-      g.droppedAt = t;
-      const who = getPlayerAt(cell.x, cell.y);
-      if (who >= 0) players[who].alive = false;
-      magic.dropIndex++;
-      if (magic.dropIndex >= magic.cells.length) {
-        magic.active = false;
-        return;
-      }
-      magic.nextAt = t + MAGIC_DROP_INTERVAL_MS;
     }
   }
 
@@ -223,18 +236,20 @@
     }
   }
 
-  function countAlive() {
-    let n = 0;
-    for (let i = 0; i < players.length; i++) if (players[i].alive) n++;
-    return n;
+  function countAliveInStage() {
+    const n = getActivePlayerCount();
+    let c = 0;
+    for (let i = 0; i < n; i++) if (players[i].alive) c++;
+    return c;
   }
 
   function decideWinner() {
     if (players[0].alive === false) return 2;
-    const alive = countAlive();
+    const alive = countAliveInStage();
     if (alive === 0) return 'draw';
     if (alive === 1) {
-      for (let i = 0; i < players.length; i++) if (players[i].alive) return i + 1;
+      const n = getActivePlayerCount();
+      for (let i = 0; i < n; i++) if (players[i].alive) return i + 1;
     }
     return null;
   }
@@ -272,6 +287,17 @@
   }
 
   // --- CPU ---
+  /** いずれかの攻撃の対象マスになっている場合は true（ここへ移動すると落ちる） */
+  function isCellInAnyAttackTarget(x, y) {
+    for (let m = 0; m < magicList.length; m++) {
+      const magic = magicList[m];
+      for (let c = 0; c < magic.cells.length; c++) {
+        if (magic.cells[c].x === x && magic.cells[c].y === y) return true;
+      }
+    }
+    return false;
+  }
+
   function getCpuMoveOptions(i) {
     const p = players[i];
     const opts = [];
@@ -281,6 +307,7 @@
       if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) continue;
       if (!panelCanStand(nx, ny)) continue;
       if (getPlayerAt(nx, ny) >= 0) continue;
+      if (isCellInAnyAttackTarget(nx, ny)) continue; // 攻撃対象マスへは移動しない
       opts.push(d);
     }
     return opts;
@@ -304,16 +331,15 @@
     for (let i = 1; i < players.length; i++) {
       const p = players[i];
       if (!p.alive || phase !== PHASE_BATTLE) continue;
-      if (magic.active) continue;
-
       if (t >= p.magicCooldownUntil && t >= p.magicStunUntil && cpuHasEnemyOnLine(i)) {
         startMagic(i);
         continue;
       }
 
+      const moveInterval = getCpuMoveIntervalMs();
       if (t < p.moveStunUntil) continue;
       if (t - p.lastDirChangeAt < CPU_TURN_STUN_MS) continue;
-      if (t - p.lastMoveAt < CPU_MOVE_INTERVAL_MS) continue;
+      if (t - p.lastMoveAt < moveInterval) continue;
 
       const opts = getCpuMoveOptions(i);
       if (opts.length === 0) continue;
@@ -327,7 +353,7 @@
       p.x += DX[d];
       p.y += DY[d];
       p.lastMoveAt = t;
-      p.moveStunUntil = t + CPU_MOVE_INTERVAL_MS;
+      p.moveStunUntil = t + moveInterval;
     }
   }
 
@@ -366,19 +392,25 @@
   }
 
   function isMagicGlowCell(x, y) {
-    if (!magic.active || magic.phase !== 'glow') return false;
-    for (let i = 0; i <= magic.glowIndex && i < magic.cells.length; i++) {
-      const c = magic.cells[i];
-      if (c.x === x && c.y === y) return true;
+    for (let m = 0; m < magicList.length; m++) {
+      const magic = magicList[m];
+      if (magic.phase !== 'glow') continue;
+      for (let i = 0; i <= magic.glowIndex && i < magic.cells.length; i++) {
+        const c = magic.cells[i];
+        if (c.x === x && c.y === y) return true;
+      }
     }
     return false;
   }
 
   function isMagicDropCell(x, y) {
-    if (!magic.active || magic.phase !== 'drop') return false;
-    for (let i = 0; i < magic.dropIndex; i++) {
-      const c = magic.cells[i];
-      if (c.x === x && c.y === y) return true;
+    for (let m = 0; m < magicList.length; m++) {
+      const magic = magicList[m];
+      if (magic.phase !== 'drop') continue;
+      for (let i = 0; i < magic.dropIndex; i++) {
+        const c = magic.cells[i];
+        if (c.x === x && c.y === y) return true;
+      }
     }
     return false;
   }
@@ -551,6 +583,11 @@
       ctx.fillText('READY', GAME_SIZE / 2, GAME_SIZE / 2);
     } else if (phase === PHASE_FIGHT) {
       ctx.fillText('FIGHT!!', GAME_SIZE / 2, GAME_SIZE / 2);
+    } else if (phase === PHASE_STAGE_CLEAR) {
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('STAGE CLEAR!', GAME_SIZE / 2, GAME_SIZE / 2 - 20);
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('Next: Stage ' + (stage + 1), GAME_SIZE / 2, GAME_SIZE / 2 + 20);
     }
   }
 
@@ -577,14 +614,22 @@
     drawGridAndPanels();
     drawPlayers();
     updatePlayerStatusDOM();
-    if (phase === PHASE_READY || phase === PHASE_FIGHT || phase === PHASE_RESULT) {
+    if (phase === PHASE_READY || phase === PHASE_FIGHT || phase === PHASE_RESULT || phase === PHASE_STAGE_CLEAR) {
       drawOverlay();
     }
+    const container = document.querySelector('.container');
+    if (container) {
+      container.classList.remove('stage-1', 'stage-2', 'stage-3', 'stage-4', 'stage-5');
+      container.classList.add('stage-' + stage);
+    }
+    const stageEl = document.getElementById('stage-indicator');
+    if (stageEl) stageEl.textContent = 'Stage ' + stage + '/' + MAX_STAGE;
   }
 
   // --- ゲームフロー ---
   function goTitle() {
     phase = PHASE_TITLE;
+    stage = 1;
     winner = null;
   }
 
@@ -608,9 +653,10 @@
   }
 
   function startNewGame() {
+    stage = 1;
     initGrid();
     initPlayers();
-    magic = { active: false, phase: null, cells: [], glowIndex: 0, dropIndex: 0, nextAt: 0, caster: null };
+    magicList = [];
     goReady();
   }
 
@@ -623,7 +669,21 @@
       updateMagic(dt);
       checkDeathByPanel();
       const w = decideWinner();
-      if (w !== null) goResult(w);
+      if (w !== null) {
+        if (w === 1 && stage < MAX_STAGE) {
+          phase = PHASE_STAGE_CLEAR;
+          phaseTimer = now() + 1500;
+        } else {
+          goResult(w);
+        }
+      }
+    }
+    if (phase === PHASE_STAGE_CLEAR && now() >= phaseTimer) {
+      stage++;
+      magicList = [];
+      initGrid();
+      initPlayers();
+      goReady();
     }
   }
 
